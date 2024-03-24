@@ -37,5 +37,5 @@ npm start
 ```
 
 ## Connected with me
-my Facebook link: [Facebook](https://www.facebook.com/ismatullah.ajj)
-My telegram Link: [Telegram](https://t.me/devjp777)
+1. my Facebook link: [Facebook](https://www.facebook.com/ismatullah.ajj)
+2. My telegram Link: [Telegram](https://t.me/devjp777)
