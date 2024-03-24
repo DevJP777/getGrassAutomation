@@ -6,6 +6,9 @@ Ini adalah skrip klien WebSocket yang ditulis dalam Node.js yang terhubung ke se
 
 1. Clone atau unduh repositori ini ke mesin lokal Anda.
 2. Buka direktori proyek dalam terminal Anda.
+```bash
+cd getGrassAutomation
+```
 3. Edit sebuah file teks bernama `proxyList.txt` dalam direktori proyek. 
 Tambahkan daftar proksi Anda dalam format seperti berikut:
 `http://ip:port`
