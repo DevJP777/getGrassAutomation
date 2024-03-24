@@ -78,7 +78,7 @@ async function connectToWss(socks5_proxy, user_id) {
 
 async function main() {
     const user_id = process.argv[2];
-    const socks5_proxy_list = fs.readFileSync('proxy_list.txt', 'utf8').split('\n');
+    const socks5_proxy_list = fs.readFileSync('proxyList.txt', 'utf8').split('\n');
     for (const socks5_proxy of socks5_proxy_list) {
         await connectToWss(socks5_proxy, user_id);
     }
