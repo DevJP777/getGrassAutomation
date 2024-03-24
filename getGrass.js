@@ -1,28 +1,71 @@
+require('dotenv').config();
 const WebSocket = require('ws');
-const fetch = require('node-fetch');
-const { v3: uuidv3 } = require('uuid');
-const { random: randomUserAgent } = require('fake-useragent');
+const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
+const randomUserAgent = require('random-useragent');
+const {HttpProxyAgent}  = require('http-proxy-agent');
+const {SocksProxyAgent} = require('socks-proxy-agent')
+const ping = require('ping');
 
-const user_agent = randomUserAgent();
+const MAX_RETRIES = 10; // Maximum number of retry attempts per proxy
+const RETRY_DELAY = 5000; // Delay in milliseconds before retrying connection
 
-async function connectToWss(socks5_proxy, user_id) {
-    const device_id = uuidv3(socks5_proxy, uuidv3.DNS);
-    console.log(device_id);
+async function measurePing(proxy) {
+    return new Promise(resolve => {
+        ping.promise.probe('8.8.8.8', { timeout: 2 }).then(result => {
+            if (result.alive) {
+                resolve(result.time);
+            } else {
+                resolve(null);
+            }
+        }).catch(err => {
+            console.error('\x1b[31mError occurred while pinging:\x1b[0m', err);
+            resolve(null);
+        });
+    });
+}
+
+async function connectToWss(proxy, user_id, retryCount = 0) {
     try {
+        if (retryCount >= MAX_RETRIES) {
+            console.error('\x1b[31mMaximum retry attempts reached for proxy:\x1b[0m', proxy);
+            return;
+        }
+
+        const device_id = uuidv4();
+        console.log('\x1b[32mNew device ID:\x1b[0m', device_id);
+        
+        await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 1000)));
+
         const custom_headers = {
-            "User-Agent": user_agent
+            "User-Agent": randomUserAgent.getRandom().toString()
         };
 
+        let agent;
+        if (proxy.startsWith('http://')) {
+            agent = new HttpProxyAgent(proxy);
+        }
+         else if (proxy.startsWith('socks://')|| proxy.startsWith('socks4://') || proxy.startsWith('socks5://')) {
+            // If the proxy starts with "socks4://" or "socks5://", replace the number in the URL with "socks://"
+            const modifiedProxy = proxy.replace(/^socks[45]:\/\//, 'socks://');
+            agent = new SocksProxyAgent(modifiedProxy);
+        } else {
+            console.error('\x1b[31mUnsupported proxy protocol:\x1b[0m', proxy);
+            return;
+        }
+
         const ws = new WebSocket('wss://proxy.wynd.network:4650/', {
-            agent: socks5_proxy,
+            agent: agent,
             headers: custom_headers
         });
 
         ws.on('open', async function open() {
+            const pingTime = await measurePing(proxy);
+            console.log('\x1b[32mConnected to proxy:\x1b[0m', proxy, "- Ping:", pingTime ? pingTime + " ms" : "Failed to ping");
+            //console.log('\x1b[32mConnected to:\x1b[0m', 'proxy:', proxy);
             setInterval(async function ping() {
                 const send_message = JSON.stringify({
-                    "id": uuidv3(),
+                    "id": uuidv4(),
                     "version": "1.0.0",
                     "action": "PING",
                     "data": {}
@@ -55,32 +98,31 @@ async function connectToWss(socks5_proxy, user_id) {
                     "id": message.id,
                     "origin_action": "PONG"
                 });
-                console.log(pong_response);
+                console.log('\x1b[32m RESPONSE PONG TO PROXY:\x1b[0m', proxy);
+                //console.log(pong_response);
                 ws.send(pong_response);
             }
         });
 
-        ws.on('error', async function(error) {
-            console.error('WebSocket error occurred:', error);
+        ws.on('error', async function (error) {
+            console.log('\x1b[31mKoneksi Gagal,Akan Menghubungkan kembali ke:\x1b[0m', proxy);
             ws.close();
-            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds before retrying
-            console.log('Reconnecting to WebSocket...');
-            connectToWss(socks5_proxy, user_id); // Retry connecting to WebSocket
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY)); // Retry after delay
+            connectToWss(proxy, user_id, retryCount + 1); // Retry connecting to WebSocket
         });
     } catch (error) {
-        console.error('Error occurred:', error);
-        console.error('Proxy:', socks5_proxy);
-        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds before retrying
-        console.log('Reconnecting to WebSocket...');
-        connectToWss(socks5_proxy, user_id); // Retry connecting to WebSocket
+        console.error('\x1b[31mError occurred:\x1b[0m', error);
+        console.error('\x1b[31mProxy:\x1b[0m', proxy);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY)); // Retry after delay
+        connectToWss(proxy, user_id, retryCount + 1); // Retry connecting to WebSocket
     }
 }
 
 async function main() {
-    const user_id = process.argv[2];
-    const socks5_proxy_list = fs.readFileSync('proxyList.txt', 'utf8').split('\n');
-    for (const socks5_proxy of socks5_proxy_list) {
-        await connectToWss(socks5_proxy, user_id);
+    const user_id = process.env.USER_ID
+    const proxy_list = fs.readFileSync('proxyList.txt', 'utf8').split('\n');
+    for (const proxy of proxy_list) {
+        await connectToWss(proxy.trim(), user_id);
     }
 }
 

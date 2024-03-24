@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "getGrass.js",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node getGrass.js"
@@ -18,11 +19,14 @@
   },
   "homepage": "https://github.com/DevJP777/getGrassAutomation#readme",
   "dependencies": {
+    "dotenv": "^16.4.5",
     "fake-useragent": "^1.0.1",
-    "node-fetch": "^3.3.2",
+    "http-proxy-agent": "^7.0.2",
+    "ping": "^0.4.4",
     "proxy-agent": "^6.4.0",
+    "random-useragent": "^0.5.0",
+    "socks-proxy-agent": "^8.0.2",
     "user-agents": "^1.1.152",
-    "util": "^0.12.5",
     "uuid": "^9.0.1",
     "ws": "^8.16.0"
   }
