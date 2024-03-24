@@ -5,6 +5,8 @@ Ini adalah skrip klien WebSocket yang ditulis dalam Node.js yang terhubung ke se
 ## Persiapan
 
 1. Clone atau unduh repositori ini ke mesin lokal Anda.
+```bash
+git clone https://github.com/DevJP777/getGrassAutomation.git
 2. Buka direktori proyek dalam terminal Anda.
 ```bash
 cd getGrassAutomation
@@ -33,3 +35,7 @@ npm install
 ```bash
 npm start
 ```
+
+## Connected with me
+[Facebook](https://www.facebook.com/ismatullah.ajj)
+[Telegram](https://t.me/devjp777)
