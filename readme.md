@@ -15,11 +15,3 @@ Anda dapat menginstal dependensi ini dengan menjalankan perintah berikut di term
 
 ```bash
 npm install ws node-fetch fake-useragent uuid
-
-## Running
-
-Jalankan Script ini dengan perintah berikut :
-
-```bash
-npm start
-
