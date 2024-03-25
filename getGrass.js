@@ -7,7 +7,7 @@ const {HttpProxyAgent}  = require('http-proxy-agent');
 const {SocksProxyAgent} = require('socks-proxy-agent')
 const ping = require('ping');
 
-const MAX_RETRIES = 10; // Maximum number of retry attempts per proxy
+const MAX_RETRIES = 1000; // Maximum number of retry attempts per proxy
 const RETRY_DELAY = 5000; // Delay in milliseconds before retrying connection
 
 async function measurePing(proxy) {
@@ -86,7 +86,7 @@ async function connectToWss(proxy, user_id, retryCount = 0) {
                         "browser_id": device_id,
                         "user_id": user_id,
                         "user_agent": custom_headers['User-Agent'],
-                        "timestamp": Math.floor(Date.now() / 1000),
+                        "timestamp": Math.floor(Date.now() / 10000),
                         "device_type": "extension",
                         "version": "3.3.2"
                     }
