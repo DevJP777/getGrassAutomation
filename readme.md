@@ -19,7 +19,7 @@ Tambahkan daftar proksi Anda dalam format seperti berikut:
 `socks5://username:password@ip:port`
 `socks5://ip:port`
 
-4. Ubah nama file `.env.example` to `.env` lalu masukan id grass anda dengan cara F11>console>ketik localStorage.user_id lalu paste di dalam variable USER_ID di file `.env`
+4. Ubah nama file `.env.example` to `.env` lalu masukan id grass anda dengan cara F12>console>ketik localStorage.user_id lalu paste di dalam variable USER_ID di file `.env`
  
 ## Instalasi
 
