@@ -70,7 +70,7 @@ async function connectToWss(proxy, user_id, retryCount = 0) {
                     "action": "PING",
                     "data": {}
                 });
-                console.log(send_message);
+                //console.log(send_message);
                 ws.send(send_message);
             }, 20000);
         });
@@ -120,7 +120,7 @@ async function connectToWss(proxy, user_id, retryCount = 0) {
 
 async function main() {
     const user_id = process.env.USER_ID
-    const proxy_list = fs.readFileSync('proxyList.txt', 'utf8').split('\n');
+    const proxy_list = fs.readFileSync('listProxy.txt', 'utf8').split('\n');
     for (const proxy of proxy_list) {
         await connectToWss(proxy.trim(), user_id);
     }
