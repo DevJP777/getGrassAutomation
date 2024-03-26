@@ -3,11 +3,11 @@ const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const randomUserAgent = require('random-useragent');
-const {HttpProxyAgent}  = require('http-proxy-agent');
-const {SocksProxyAgent} = require('socks-proxy-agent')
+const { HttpProxyAgent } = require('http-proxy-agent');
+const { SocksProxyAgent } = require('socks-proxy-agent');
 const ping = require('ping');
 
-const MAX_RETRIES = 1000; // Maximum number of retry attempts per proxy
+const MAX_RETRIES = 2; // Maximum number of retry attempts per proxy
 const RETRY_DELAY = 5000; // Delay in milliseconds before retrying connection
 
 async function measurePing(proxy) {
@@ -25,16 +25,30 @@ async function measurePing(proxy) {
     });
 }
 
+async function removeFromProxyList(proxyToRemove) {
+    try {
+        let proxyList = fs.readFileSync('proxyList.txt', 'utf8');
+        const proxyArray = proxyList.split('\n');
+        const updatedProxyArray = proxyArray.filter(proxy => proxy.trim() !== proxyToRemove.trim());
+        const updatedProxyList = updatedProxyArray.join('\n');
+        fs.writeFileSync('proxyList.txt', updatedProxyList, 'utf8');
+        console.log('\x1b[32mProxy removed from list:\x1b[0m', proxyToRemove);
+    } catch (error) {
+        console.error('\x1b[31mError occurred while removing proxy from list:\x1b[0m', error);
+    }
+}
+
 async function connectToWss(proxy, user_id, retryCount = 0) {
     try {
         if (retryCount >= MAX_RETRIES) {
             console.error('\x1b[31mMaximum retry attempts reached for proxy:\x1b[0m', proxy);
+            await removeFromProxyList(proxy);
             return;
         }
 
         const device_id = uuidv4();
         console.log('\x1b[32mNew device ID:\x1b[0m', device_id);
-        
+
         await new Promise(resolve => setTimeout(resolve, Math.floor(Math.random() * 1000)));
 
         const custom_headers = {
@@ -44,8 +58,7 @@ async function connectToWss(proxy, user_id, retryCount = 0) {
         let agent;
         if (proxy.startsWith('http://')) {
             agent = new HttpProxyAgent(proxy);
-        }
-         else if (proxy.startsWith('socks://')|| proxy.startsWith('socks4://') || proxy.startsWith('socks5://')) {
+        } else if (proxy.startsWith('socks://') || proxy.startsWith('socks4://') || proxy.startsWith('socks5://')) {
             // If the proxy starts with "socks4://" or "socks5://", replace the number in the URL with "socks://"
             const modifiedProxy = proxy.replace(/^socks[45]:\/\//, 'socks://');
             agent = new SocksProxyAgent(modifiedProxy);
@@ -93,7 +106,7 @@ async function connectToWss(proxy, user_id, retryCount = 0) {
                 });
                 console.log(auth_response);
                 ws.send(auth_response);
-            } else if (message.action === "PONG") {
+            }             else if (message.action === "PONG") {
                 const pong_response = JSON.stringify({
                     "id": message.id,
                     "origin_action": "PONG"
@@ -127,3 +140,4 @@ async function main() {
 }
 
 main();
+
