@@ -6,8 +6,9 @@ const randomUserAgent = require('random-useragent');
 const { HttpProxyAgent } = require('http-proxy-agent');
 const { SocksProxyAgent } = require('socks-proxy-agent');
 const ping = require('ping');
+const { HttpsProxyAgent } = require('https-proxy-agent');
 
-const MAX_RETRIES = 2; // Maximum number of retry attempts per proxy
+const MAX_RETRIES = 10; // Maximum number of retry attempts per proxy
 const RETRY_DELAY = 5000; // Delay in milliseconds before retrying connection
 
 async function measurePing(proxy) {
@@ -32,7 +33,7 @@ async function removeFromProxyList(proxyToRemove) {
         const updatedProxyArray = proxyArray.filter(proxy => proxy.trim() !== proxyToRemove.trim());
         const updatedProxyList = updatedProxyArray.join('\n');
         fs.writeFileSync('proxyList.txt', updatedProxyList, 'utf8');
-        console.log('\x1b[32mProxy removed from list:\x1b[0m', proxyToRemove);
+        console.log('\x1b[33mProxy removed from list:\x1b[0m', proxy);
     } catch (error) {
         console.error('\x1b[31mError occurred while removing proxy from list:\x1b[0m', error);
     }
@@ -58,6 +59,8 @@ async function connectToWss(proxy, user_id, retryCount = 0) {
         let agent;
         if (proxy.startsWith('http://')) {
             agent = new HttpProxyAgent(proxy);
+        } else if (proxy.startsWith('https://')) {
+            agent = new HttpsProxyAgent(proxy);
         } else if (proxy.startsWith('socks://') || proxy.startsWith('socks4://') || proxy.startsWith('socks5://')) {
             // If the proxy starts with "socks4://" or "socks5://", replace the number in the URL with "socks://"
             const modifiedProxy = proxy.replace(/^socks[45]:\/\//, 'socks://');
@@ -106,7 +109,7 @@ async function connectToWss(proxy, user_id, retryCount = 0) {
                 });
                 console.log(auth_response);
                 ws.send(auth_response);
-            }             else if (message.action === "PONG") {
+            } else if (message.action === "PONG") {
                 const pong_response = JSON.stringify({
                     "id": message.id,
                     "origin_action": "PONG"
