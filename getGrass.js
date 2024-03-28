@@ -35,7 +35,7 @@ async function removeFromProxyList(proxyToRemove) {
         fs.writeFileSync('proxyList.txt', updatedProxyList, 'utf8');
         console.log('\x1b[33mProxy removed from list:\x1b[0m', proxy);
     } catch (error) {
-        console.error('\x1b[31mError occurred while removing proxy from list:\x1b[0m', error);
+        console.log('\x1b[31mError occurred while removing proxy from list:\x1b[0m', error);
     }
 }
 
@@ -76,20 +76,20 @@ async function connectToWss(proxy, user_id, retryCount = 0) {
         });
 
         ws.on('open', async function open() {
-            const pingTime = await measurePing(proxy);
-            console.log('\x1b[32mConnected to proxy:\x1b[0m', proxy, "- Ping:", pingTime ? pingTime + " ms" : "Failed to ping");
-            //console.log('\x1b[32mConnected to:\x1b[0m', 'proxy:', proxy);
-            setInterval(async function ping() {
+            console.log('\x1b[32mConnected to proxy:\x1b[0m', proxy);
+            setInterval(async function () {
+                const pingTime = await measurePing(proxy);
+                console.log('\x1b[32mPing to proxy:\x1b[0m', proxy, "- Time:", pingTime ? pingTime + " ms" : "Failed to ping");
                 const send_message = JSON.stringify({
                     "id": uuidv4(),
                     "version": "1.0.0",
                     "action": "PING",
                     "data": {}
                 });
-                //console.log(send_message);
                 ws.send(send_message);
-            }, 20000);
+            }, 20000); // Kirim pesan ping setiap 20 detik
         });
+        
 
         ws.on('message', async function incoming(data) {
             const message = JSON.parse(data);
